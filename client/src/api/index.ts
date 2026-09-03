@@ -1,19 +1,17 @@
-import { logger } from '@lark-apaas/client-toolkit/logger';
 import { axiosForBackend } from '@lark-apaas/client-toolkit/utils/getAxiosForBackend';
 
+export async function getMarketPayload<T>(): Promise<T> {
+  const response = await axiosForBackend({
+    url: '/api/market',
+    method: 'GET',
+  });
+  return response.data as T;
+}
 
-// Add more API functions here, use axios instance (`axiosForBackend`) to make requests.
-// 
-// 使用示例：
-// export async function getUserData(userId: string) {
-//   try {
-//     const response = await axiosForBackend({
-//       url: `/api/users/${userId}`,
-//       method: 'GET'
-//     });
-//     return response.data;
-//   } catch (error) {
-//     logger.error('获取用户数据失败', error);
-//     throw error;
-//   }
-// }
+export async function getSecurityRadarPayload<T>(): Promise<T> {
+  const response = await axiosForBackend({
+    url: '/api/security-radar',
+    method: 'GET',
+  });
+  return response.data as T;
+}

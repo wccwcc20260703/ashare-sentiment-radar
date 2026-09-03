@@ -257,7 +257,10 @@ async function main() {
   // Initialize action plugins
   writeOutput('\n🔌 Initializing action plugins...\n');
   try {
-    execSync('fullstack-cli action-plugin init', { cwd: PROJECT_ROOT, stdio: 'inherit' });
+    execSync('npx -y @lark-apaas/fullstack-cli@latest action-plugin init', {
+      cwd: PROJECT_ROOT,
+      stdio: 'inherit',
+    });
     writeOutput('✅ Action plugins initialized\n\n');
   } catch {
     writeOutput('⚠️  Action plugin initialization failed, continuing anyway...\n\n');
