@@ -18,6 +18,8 @@
     "build:prod": "npm run build:server && npm run build:client",
     "build:server": "NODE_ENV=production nest build",
     "build:client": "NODE_ENV=production vite build --config vite.config.ts",
+    "build:pages": "VITE_PAGES_MODE=true vite build --config vite.pages.config.ts",
+    "data:pages": "ts-node -r tsconfig-paths/register --project tsconfig.node.json scripts/generate-pages-data.ts",
     "start": "NODE_ENV=production node main.js",
     "test": "jest",
     "test:watch": "jest --watch",
