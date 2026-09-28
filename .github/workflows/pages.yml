@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run data:pages
       - run: npm run build:pages
       - uses: actions/configure-pages@v5
