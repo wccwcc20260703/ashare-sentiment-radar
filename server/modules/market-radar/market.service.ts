@@ -1,5 +1,7 @@
 import type { LiveMarketPayload } from "@shared/api.interface";
 
+import { fetchMarketData } from "./market-source";
+
 import { buildVixFixSignals } from "./vix-fix-signals";
 
 const NextResponse = {
@@ -431,34 +433,23 @@ export async function GET() {
   };
 
   try {
-    const [countResponse, klineResponse, shanghaiKlineResponse, quoteResponse] =
-      await Promise.all([
-        fetch(countUrl, { headers }),
-        fetch(klineUrl, { headers }),
-        fetch(shanghaiKlineUrl, { headers }),
-        fetch(quoteUrl, { headers }),
-      ]);
-    if (
-      !countResponse.ok ||
-      !klineResponse.ok ||
-      !shanghaiKlineResponse.ok ||
-      !quoteResponse.ok
-    ) {
-      throw new Error("行情源暂时不可用");
-    }
-
-    const countText = await countResponse.text();
-    const total = Number(countText.match(/\d+/)?.[0] ?? 0);
-    const klines = parseKlines(await klineResponse.text());
-    const shanghaiKlines = parseKlines(await shanghaiKlineResponse.text());
+    const [total, klines, shanghaiKlines, quoteText] = await Promise.all([
+      fetchMarketData(countUrl, headers, (text) => {
+        const count = Number(text.match(/^\s*"?(\d+)"?\s*$/)?.[1] ?? 0);
+        if (count < 1000) throw new Error("行情样本不足：股票数量无效");
+        return count;
+      }),
+      fetchMarketData(klineUrl, headers, parseKlines),
+      fetchMarketData(shanghaiKlineUrl, headers, parseKlines),
+      fetchMarketData(quoteUrl, headers, (text) => text),
+    ]);
     const shanghaiByDate = new Map(
       shanghaiKlines.map((item) => [item.day, Number(item.close)]),
     );
-    const quoteText = await quoteResponse.text();
     if (total < 1000 || klines.length < 30) throw new Error("行情样本不足");
 
     const pageCount = Math.ceil(total / PAGE_SIZE);
-    const pageCache = new Map<number, SinaStock[]>();
+    const pageCache = new Map<number, Promise<SinaStock[]>>();
     async function fetchPage(page: number) {
       const safePage = Math.max(1, Math.min(pageCount, page));
       if (pageCache.has(safePage)) return pageCache.get(safePage)!;
@@ -475,11 +466,20 @@ export async function GET() {
         symbol: "",
         _s_r_a: "page",
       }).toString();
-      const response = await fetch(url, { headers });
-      if (!response.ok) throw new Error("市场宽度读取失败");
-      const rows = (await response.json()) as SinaStock[];
-      pageCache.set(safePage, rows);
-      return rows;
+      // Cache the promise before awaiting: all six searches start at the same page.
+      const pending = fetchMarketData(url, headers, (text) => {
+        const rows: SinaStock[] = JSON.parse(text);
+        if (!Array.isArray(rows) || rows.length === 0 || rows.some(
+          (row) => !row || row.changepercent == null ||
+            String(row.changepercent).trim() === "" ||
+            !Number.isFinite(Number(row.changepercent)),
+        )) {
+          throw new Error("市场宽度样本无效");
+        }
+        return rows;
+      });
+      pageCache.set(safePage, pending);
+      return pending;
     }
 
     async function countGreaterOrEqual(threshold: number) {

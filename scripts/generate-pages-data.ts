@@ -12,7 +12,8 @@ async function main() {
 
   if (!market.live || !securityRadar.live) {
     throw new Error(
-      `行情生成失败：market=${String(market.live)}, securityRadar=${String(securityRadar.live)}`,
+      `行情生成失败：market=${String(market.live)} (${"error" in market ? market.error : "无错误详情"}), ` +
+      `securityRadar=${String(securityRadar.live)} (${"error" in securityRadar ? securityRadar.error : "无错误详情"})`,
     );
   }
 

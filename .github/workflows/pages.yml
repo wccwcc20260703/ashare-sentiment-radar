@@ -29,6 +29,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
+      - run: npm run test:market-source
       - run: npm run data:pages
       - run: npm run build:pages
       - uses: actions/configure-pages@v5

@@ -22,6 +22,7 @@
     "data:pages": "ts-node -r tsconfig-paths/register --project tsconfig.node.json scripts/generate-pages-data.ts",
     "start": "NODE_ENV=production node main.js",
     "test": "jest",
+    "test:market-source": "node --experimental-strip-types --test test/unit/market-source.test.mjs",
     "test:watch": "jest --watch",
     "test:e2e": "jest --config test/e2e/jest.config.js",
     "eslint": "eslint . --quiet",
